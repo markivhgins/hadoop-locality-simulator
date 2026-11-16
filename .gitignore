@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.env
+venv/
+env/
+.venv/
+
+# Build artifacts
+build/
+bin/
+*.exe
+*.o
+*.obj
+
+# OS & IDE
+.DS_Store
+.idea/
+.vscode/
+Thumbs.db
