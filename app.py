@@ -301,36 +301,62 @@ if page == "🎮 Live Interactive Simulator":
     # Interactive Execution Timeline (Gantt Chart)
     st.markdown("---")
     st.subheader("📅 Interactive Task Scheduling Timeline (Gantt Chart)")
-    chosen_sched_name = st.radio("Inspect policy execution timeline:", ["Delay Scheduling", "Greedy Aware", "Locality-Blind"], horizontal=True)
+    col_tl1, col_tl2 = st.columns([2, 1])
+    with col_tl1:
+        chosen_sched_name = st.radio("Inspect policy execution timeline:", ["Delay Scheduling", "Greedy Aware", "Locality-Blind"], horizontal=True)
+    with col_tl2:
+        lane_mode = st.radio("Group By:", ["Worker Slots (Detailed)", "Worker Nodes"], horizontal=True)
+
     active_m = m_delay if chosen_sched_name == "Delay Scheduling" else (m_aware if chosen_sched_name == "Greedy Aware" else m_blind)
 
     gantt_rows = []
     loc_names = {Locality.NODE_LOCAL: "Node-Local", Locality.RACK_LOCAL: "Rack-Local", Locality.OFF_RACK: "Off-Rack"}
     for r in active_m.records:
+        if lane_mode == "Worker Slots (Detailed)":
+            lane = f"Worker {r.worker:02d} [R{wl.rack_of[r.worker]}] - Slot {r.slot}"
+        else:
+            lane = f"Worker {r.worker:02d} [Rack {wl.rack_of[r.worker]}]"
+        
         gantt_rows.append({
-            "Worker": f"Worker {r.worker} (Rack {wl.rack_of[r.worker]})",
+            "Lane": lane,
             "Start": r.start,
-            "Read End": r.read_end,
             "Finish": r.finish,
+            "Duration": round(r.finish - r.start, 2),
+            "Read Time": round(r.read_end - r.start, 2),
             "Task ID": f"Task {r.task_id} (Job {r.job})",
-            "Locality": loc_names[r.locality],
-            "Duration (s)": round(r.finish - r.start, 2),
-            "Read Time (s)": round(r.read_end - r.start, 2)
+            "Locality": loc_names[r.locality]
         })
-    gantt_df = pd.DataFrame(gantt_rows).sort_values("Worker")
+    gantt_df = pd.DataFrame(gantt_rows).sort_values("Lane", ascending=False)
 
-    fig_gantt = px.timeline(
-        gantt_df,
-        x_start="Start",
-        x_end="Finish",
-        y="Worker",
-        color="Locality",
-        hover_data=["Task ID", "Duration (s)", "Read Time (s)"],
-        color_discrete_map={"Node-Local": "#10B981", "Rack-Local": "#F59E0B", "Off-Rack": "#EF4444"},
-        title=f"Task Timeline on Each Worker ({chosen_sched_name})"
+    fig_gantt = go.Figure()
+    color_map = {"Node-Local": "#10B981", "Rack-Local": "#F59E0B", "Off-Rack": "#EF4444"}
+    for loc in ["Node-Local", "Rack-Local", "Off-Rack"]:
+        sub = gantt_df[gantt_df["Locality"] == loc]
+        if len(sub) > 0:
+            fig_gantt.add_trace(go.Bar(
+                name=loc,
+                y=sub["Lane"],
+                x=sub["Duration"],
+                base=sub["Start"],
+                orientation="h",
+                marker=dict(color=color_map[loc], line=dict(color="#1E293B", width=0.5)),
+                customdata=np.stack((sub["Task ID"], sub["Start"], sub["Read Time"], sub["Duration"]), axis=-1),
+                hovertemplate="<b>%{customdata[0]}</b><br>" +
+                              "Locality: " + loc + "<br>" +
+                              "Start: %{customdata[1]:.2f}s<br>" +
+                              "Read Phase: %{customdata[2]:.2f}s<br>" +
+                              "Total Duration: %{customdata[3]:.2f}s<extra></extra>"
+            ))
+
+    chart_height = max(450, len(gantt_df["Lane"].unique()) * 22)
+    fig_gantt.update_layout(
+        barmode="overlay",
+        xaxis=dict(title="Execution Time (seconds)", showgrid=True, zeroline=True),
+        yaxis=dict(title="Cluster Worker / Slot Lane", automargin=True),
+        height=min(chart_height, 750),
+        margin=dict(l=20, r=20, t=40, b=20),
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
     )
-    fig_gantt.update_yaxes(autorange="reversed")
-    fig_gantt.update_layout(xaxis_title="Time (seconds)", height=450, margin=dict(l=20, r=20, t=40, b=20))
     st.plotly_chart(fig_gantt, use_container_width=True)
 
 # =========================================================================

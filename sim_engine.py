@@ -44,6 +44,7 @@ class TaskRecord:
     task_id: int
     job: int
     worker: int = -1
+    slot: int = 0
     start: float = 0.0
     read_end: float = 0.0
     finish: float = 0.0
@@ -253,6 +254,7 @@ def run_simulation(wl: Workload, sched: BaseScheduler) -> SimMetrics:
         seq += 1
         
     free_slots = [cfg.slots] * cfg.workers
+    slot_busy = [[False] * cfg.slots for _ in range(cfg.workers)]
     free_total = cfg.workers * cfg.slots
     ready = []  # list of task IDs
     
@@ -285,10 +287,13 @@ def run_simulation(wl: Workload, sched: BaseScheduler) -> SimMetrics:
                 continue
             ready.pop(i)
             free_slots[w] -= 1
+            s_idx = next(s for s in range(cfg.slots) if not slot_busy[w][s])
+            slot_busy[w][s_idx] = True
             free_total -= 1
             loc = classify(wl, w, wl.blocks[t.block])
             r = m.records[tid]
             r.worker = w
+            r.slot = s_idx
             r.start = now
             r.locality = loc
             
@@ -367,6 +372,7 @@ def run_simulation(wl: Workload, sched: BaseScheduler) -> SimMetrics:
             elif evtype == 2:  # TaskFinish
                 r = m.records[idx]
                 free_slots[r.worker] += 1
+                slot_busy[r.worker][r.slot] = False
                 free_total += 1
                 busy += (r.finish - r.start)
                 j = wl.tasks[idx].job
