@@ -573,14 +573,41 @@ elif page == "📄 Research Paper & Downloads":
         """)
 
     with col_p2:
-        st.markdown("### 📥 Downloads")
-        if os.path.exists("paper.pdf"):
-            with open("paper.pdf", "rb") as f:
+        st.markdown("### 📥 Document Downloads")
+        if os.path.exists("paper_ieee.pdf"):
+            with open("paper_ieee.pdf", "rb") as f:
                 st.download_button(
-                    "📄 Download Research Paper (PDF)",
+                    "📄 Research Paper (IEEE PDF - 5 Pages)",
                     data=f.read(),
-                    file_name="hadoop_data_locality_paper.pdf",
+                    file_name="paper_ieee_vikram_amit.pdf",
                     mime="application/pdf",
+                    use_container_width=True
+                )
+        if os.path.exists("paper_ieee.docx"):
+            with open("paper_ieee.docx", "rb") as f:
+                st.download_button(
+                    "📝 Research Paper (IEEE DOCX)",
+                    data=f.read(),
+                    file_name="paper_ieee_vikram_amit.docx",
+                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                    use_container_width=True
+                )
+        if os.path.exists("big_data_project_report.pdf"):
+            with open("big_data_project_report.pdf", "rb") as f:
+                st.download_button(
+                    "📑 SRM Project Report (PDF)",
+                    data=f.read(),
+                    file_name="SRM_Big_Data_Project_Report.pdf",
+                    mime="application/pdf",
+                    use_container_width=True
+                )
+        if os.path.exists("big_data_project_report.docx"):
+            with open("big_data_project_report.docx", "rb") as f:
+                st.download_button(
+                    "📘 SRM Project Report (DOCX)",
+                    data=f.read(),
+                    file_name="SRM_Big_Data_Project_Report.docx",
+                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                     use_container_width=True
                 )
         if os.path.exists("summary.csv"):
