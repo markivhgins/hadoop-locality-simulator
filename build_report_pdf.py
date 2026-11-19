@@ -159,8 +159,8 @@ def build_report_pdf():
     story = []
     
     # ---------------- PAGE 1: COVER PAGE ----------------
-    if os.path.exists('extracted_report_assets/image_1.png'):
-        story.append(Image('extracted_report_assets/image_1.png', width=240, height=80))
+    if os.path.exists('extracted_report_assets/image1.png'):
+        story.append(Image('extracted_report_assets/image1.png', width=240, height=80))
         story.append(Spacer(1, 10))
         
     story.append(Paragraph("BIG DATA ESSENTIALS PROJECT REPORT<br/>(Code 21CSC314P)", t_style))
@@ -169,11 +169,11 @@ def build_report_pdf():
     story.append(Spacer(1, 10))
     story.append(Paragraph("<b>SUBMITTED BY:</b>", sub_style))
     story.append(Spacer(1, 2))
-    story.append(Paragraph("VIKRAM SINGH (RA2411028030010)<br/>AMIT VIKRAM SINGH (RA2411028030016)", names_style))
+    story.append(Paragraph("Vikram Singh (RA2411028030010)<br/>&nbsp;&nbsp;&nbsp;&nbsp;Amit Vikram Singh (RA2411028030016)", names_style))
     story.append(Spacer(1, 12))
     
-    if os.path.exists('extracted_report_assets/image_0.png'):
-        story.append(Image('extracted_report_assets/image_0.png', width=380, height=190))
+    if os.path.exists('extracted_report_assets/image2.png'):
+        story.append(Image('extracted_report_assets/image2.png', width=380, height=190))
         story.append(Spacer(1, 12))
         
     story.append(Paragraph(
@@ -185,10 +185,6 @@ def build_report_pdf():
     story.append(PageBreak())
     
     # ---------------- PAGE 2: BONAFIDE CERTIFICATE ----------------
-    if os.path.exists('extracted_report_assets/image_5.png'):
-        story.append(Image('extracted_report_assets/image_5.png', width=220, height=95))
-        story.append(Spacer(1, 15))
-        
     cert_title_style = ParagraphStyle(
         'CertTitle',
         parent=styles['Normal'],
@@ -197,25 +193,36 @@ def build_report_pdf():
         leading=18,
         alignment=1,
         spaceBefore=10,
-        spaceAfter=20,
+        spaceAfter=10,
         textColor=colors.HexColor("#0F172A")
     )
-    story.append(Paragraph("<u>BONAFIDE CERTIFICATE</u>", cert_title_style))
-    story.append(Spacer(1, 15))
+    
+    cert_hdr_data = [
+        ["", Paragraph("<font size=15><b><u>BONAFIDE CERTIFICATE</u></b></font>", cert_title_style), ""]
+    ]
+    if os.path.exists('extracted_report_assets/image3.png'):
+        cert_hdr_data[0][2] = Image('extracted_report_assets/image3.png', width=120, height=52)
+        
+    t_cert_hdr = Table(cert_hdr_data, colWidths=[100, 280, 120])
+    t_cert_hdr.setStyle(TableStyle([
+        ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+        ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+    ]))
+    story.append(t_cert_hdr)
+    story.append(Spacer(1, 25))
     
     cert_body = (
-        "Certified to be the bonafide record of work done by <b>Vikram Singh (Regd. No. RA2411028030010)</b> and "
-        "<b>Amit Vikram Singh (Regd. No. RA2411028030016)</b> of 5th semester, 3rd year B.Tech degree course in "
-        "<b>SRM INSTITUTE OF SCIENCE AND TECHNOLOGY</b>, Delhi-NCR Campus, Modinagar, Department of Computer Science & Engineering, "
-        "in Big Data Essentials (21CSC314P), during the academic year 2026-2027.<br/><br/>"
-        "Project Title: <i>'A Practical Study of Data Locality Optimization Techniques in Hadoop MapReduce'</i>"
+        "Certified to be the bonafide record of work done by <b>Vikram Singh (RA2411028030010)</b>, "
+        "<b>Amit Vikram Singh (RA2411028030016)</b> of 5th semester 3rd year B.TECH degree course in "
+        "<b>SRM INSTITUTE OF SCIENCE AND TECHNOLOGY, NCR</b> Campus of Department of Computer Science & Engineering, "
+        "in <b>Big Data Essentials,</b> during the academic year 2026-2027."
     )
     cert_style = ParagraphStyle(
         'CertBody',
         parent=styles['Normal'],
         fontName='Times-Roman',
-        fontSize=11.5,
-        leading=17,
+        fontSize=12,
+        leading=18,
         alignment=4,
         textColor=colors.HexColor("#1E293B")
     )
@@ -223,8 +230,8 @@ def build_report_pdf():
     story.append(Spacer(1, 80))
     
     sig_data = [
-        [Paragraph("<b>___________________________<br/>Mr. Tapas Kumar Mishra</b><br/>Assistant Professor (CSE)<br/>Course Coordinator", body_style),
-         Paragraph("<b>___________________________<br/>Dr. Neelam Singh</b><br/>Head of the Department (CSE)<br/>SRM IST, Delhi-NCR Campus", body_style)]
+        [Paragraph("<b>Mr. Tapas Kumar Mishra</b><br/>Assistant Professor<br/>(CSE)", body_style),
+         Paragraph("<b>Dr. Neelam Singh</b><br/>Head of the Department<br/>(CSE)", body_style)]
     ]
     t_sig = Table(sig_data, colWidths=[250, 250])
     t_sig.setStyle(TableStyle([

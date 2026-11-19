@@ -7,74 +7,29 @@ from docx.oxml import OxmlElement, parse_xml
 from docx.oxml.ns import nsdecls, qn
 
 def build_perfect_report():
-    ref_path = r'C:\Users\vikra\.gemini\antigravity\brain\b58840ca-396c-4537-bb66-d808da467a69\.user_uploaded\media_1795110436664_4eac7452.docx'
-    doc = docx.Document(ref_path)
+    # Use the user-uploaded 2-page document containing the exact front 2 pages
+    user_uploaded_path = r'C:\Users\vikra\.gemini\antigravity\brain\b58840ca-396c-4537-bb66-d808da467a69\.user_uploaded\media_1795122902851_8fa52a93.docx'
+    doc = docx.Document(user_uploaded_path)
     
-    # 1. Update Names on Cover Page (preserving all paragraph properties and run formatting)
-    # P5 is Lakshay Tuteja
-    p5 = doc.paragraphs[5]
-    p5.runs[0].text = "VIKRAM SINGH(RA2411028030010)"
-        
-    # P6 is Kartik Kansal
-    p6 = doc.paragraphs[6]
-    p6.runs[0].text = "    Amit Vikram Singh(RA2411028030016)"
-        
-    # 2. Update Bonafide Certificate text (P15)
-    # Preserves exact run structures, keeping SRM Institute and Big Data Essentials in bold
-    p15 = doc.paragraphs[15]
-    p15.runs[3].text = "Vikram Singh(RA2411028030010),"
-    p15.runs[4].text = "Amit Vikram Singh RA2411028030016"
-        
-    # 3. Update Title (P17), Subtitle (P18), Author/Domain (P19)
-    p17 = doc.paragraphs[17]
-    p17.runs[0].text = "A Practical Study of Data Locality Optimization Techniques in Hadoop MapReduce"
-    
-    p18 = doc.paragraphs[18]
-    p18.runs[0].text = "Project Title: Interactive Dashboard and Simulation of Data Locality Optimization in Hadoop MapReduce"
-    
-    p19 = doc.paragraphs[19]
-    p19.runs[0].text = "Domain: Big Data Systems & Distributed Computing · Cloud Computing | Tools: C++20, Python (Streamlit, pandas, plotly, scipy, matplotlib)"
-    
-    # 4. Update INDEX table (Table 2)
-    t_idx = doc.tables[2]
-    index_entries = [
-        ("1", "Abstract", "5"),
-        ("2", "Section 1 — Introduction", "6"),
-        ("3", "Section 2 — Theoretical Framework: Hadoop Architecture & Data Locality", "7"),
-        ("4", "Section 3 — Simulation Model & Experimental Datasets", "8"),
-        ("5", "Section 4 — Methodology", "10"),
-        ("6", "Section 5 — Locality Dynamics & Experimental Analysis", "11"),
-        ("7", "Section 6 — Dashboard Design (Streamlit & Plotly)", "15"),
-        ("8", "Section 7 — Implementation Status", "17"),
-        ("9", "Section 8 — Results and Discussion", "18"),
-        ("10", "Section 9 — Challenges and Limitations", "19"),
-        ("11", "Section 10 — Conclusion and Future Work", "20"),
-        ("12", "Section 11 — References", "21"),
-        ("13", "Appendix A — Project Files", "22")
-    ]
-    for r_idx, (sr, part, pg) in enumerate(index_entries):
-        row = t_idx.rows[r_idx + 1]
-        for c_idx, val in enumerate([sr, part, pg]):
-            cell = row.cells[c_idx]
-            p = cell.paragraphs[0]
-            p.style = 'Compact'
-            if p.runs:
-                p.runs[0].text = val
-                for r in p.runs[1:]:
-                    r.text = ""
-            else:
-                p.add_run(val)
-
-    # 5. Remove all body elements from index 24 up to len(body)-1 (leaving sectPr intact)
+    # Body elements in the uploaded document:
+    # 0-12: Cover page
+    # 13: Page break paragraph
+    # 14: Table 0 (Bonafide certificate header with SRM seal & logo)
+    # 15: Empty spacing paragraph
+    # 16: Certificate text paragraph with Vikram Singh and Amit Vikram Singh
+    # 17: Empty spacing paragraph
+    # 18: Table 1 (Signatures: Mr. Tapas Kumar Mishra & Dr. Neelam Singh)
+    # 19: Trailing empty paragraph
+    # 20: sectPr
     body = doc._body._body
-    while len(body) > 25:
-        el = body[24]
-        if el.tag.endswith('sectPr'):
-            break
-        body.remove(el)
-        
-    print(f"Preserved elements 0-23. Remaining body elements before appending: {len(body)}")
+    print(f"Initial body elements: {len(body)}")
     
+    # Remove trailing empty paragraph 19 if present
+    while len(body) > 20 and not body[19].tag.endswith('sectPr'):
+        body.remove(body[19])
+        
+    print(f"Preserved front 2 pages intact (elements 0-18). Appending project content...")
+
     # Helpers using exact template styles
     def h2(text):
         p = doc.add_paragraph(style='Heading 2')
@@ -131,6 +86,50 @@ def build_perfect_report():
                 p.style = 'Compact'
                 p.add_run(str(val))
         return tbl
+
+    # =========================================================================
+    # PAGE 3: TITLE, SUBTITLE, AUTHOR
+    # =========================================================================
+    p_title = doc.add_paragraph(style='Title')
+    pPr = p_title._p.get_or_add_pPr()
+    pPr.append(parse_xml(r'<w:pageBreakBefore xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"/>'))
+    pPr.append(parse_xml(r'<w:spacing xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" w:before="3969" w:after="480"/>'))
+    p_title.add_run("A Practical Study of Data Locality Optimization Techniques in Hadoop MapReduce")
+
+    p_sub = doc.add_paragraph(style='Subtitle')
+    pPr = p_sub._p.get_or_add_pPr()
+    pPr.append(parse_xml(r'<w:spacing xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" w:after="600"/>'))
+    p_sub.add_run("Project Title: Interactive Dashboard and Simulation of Data Locality Optimization in Hadoop MapReduce")
+
+    p_auth = doc.add_paragraph(style='Author')
+    p_auth.add_run("Domain: Big Data Systems & Distributed Computing · Cloud Computing | Tools: C++20, Python (Streamlit, pandas, plotly, scipy, matplotlib)")
+
+    # =========================================================================
+    # PAGE 4: INDEX
+    # =========================================================================
+    p_idx = doc.add_paragraph(style='Heading 2')
+    pPr = p_idx._p.get_or_add_pPr()
+    pPr.append(parse_xml(r'<w:pageBreakBefore xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"/>'))
+    pPr.append(parse_xml(r'<w:jc xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" w:val="center"/>'))
+    p_idx.add_run("INDEX")
+
+    index_headers = ["Sr. No.", "Particulars", "Page No."]
+    index_entries = [
+        ("1", "Abstract", "5"),
+        ("2", "Section 1 — Introduction", "6"),
+        ("3", "Section 2 — Theoretical Framework: Hadoop Architecture & Data Locality", "7"),
+        ("4", "Section 3 — Simulation Model & Experimental Datasets", "8"),
+        ("5", "Section 4 — Methodology", "10"),
+        ("6", "Section 5 — Locality Dynamics & Experimental Analysis", "11"),
+        ("7", "Section 6 — Dashboard Design (Streamlit & Plotly)", "15"),
+        ("8", "Section 7 — Implementation Status", "17"),
+        ("9", "Section 8 — Results and Discussion", "18"),
+        ("10", "Section 9 — Challenges and Limitations", "19"),
+        ("11", "Section 10 — Conclusion and Future Work", "20"),
+        ("12", "Section 11 — References", "21"),
+        ("13", "Appendix A — Project Files", "22")
+    ]
+    add_table(index_headers, index_entries)
 
     # =========================================================================
     # ABSTRACT
