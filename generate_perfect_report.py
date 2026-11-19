@@ -10,52 +10,33 @@ def build_perfect_report():
     ref_path = r'C:\Users\vikra\.gemini\antigravity\brain\b58840ca-396c-4537-bb66-d808da467a69\.user_uploaded\media_1795110436664_4eac7452.docx'
     doc = docx.Document(ref_path)
     
-    # 1. Update Names on Cover Page
+    # 1. Update Names on Cover Page (preserving all paragraph properties and run formatting)
     # P5 is Lakshay Tuteja
     p5 = doc.paragraphs[5]
-    p5.text = "VIKRAM SINGH(RA2411028030010)"
-    for r in p5.runs:
-        r.font.name = "Times New Roman"
-        r.font.size = Pt(15)
-        r.font.bold = True
-        r.font.color.rgb = RGBColor(0, 0, 0)
+    p5.runs[0].text = "VIKRAM SINGH(RA2411028030010)"
         
     # P6 is Kartik Kansal
     p6 = doc.paragraphs[6]
-    p6.text = "    Amit Vikram Singh(RA2411028030016)"
-    for r in p6.runs:
-        r.font.name = "Times New Roman"
-        r.font.size = Pt(15)
-        r.font.bold = True
-        r.font.color.rgb = RGBColor(0, 0, 0)
+    p6.runs[0].text = "    Amit Vikram Singh(RA2411028030016)"
         
     # 2. Update Bonafide Certificate text (P15)
+    # Preserves exact run structures, keeping SRM Institute and Big Data Essentials in bold
     p15 = doc.paragraphs[15]
-    p15.text = (
-        "Certified to be the bonafide record of work done by "
-        "Vikram Singh(RA2411028030010),Amit Vikram Singh RA2411028030016 "
-        "of 5th semester 3rd year B.TECH degree course in SRM INSTITUTE OF SCIENCE AND TECHNOLOGY, "
-        "NCR Campus of Department of Computer Science & Engineering, in Big Data Essentials, "
-        "during the academic year 2026-2027."
-    )
-    for r in p15.runs:
-        r.font.name = "Times New Roman"
-        r.font.size = Pt(14)
-        r.font.color.rgb = RGBColor(0, 0, 0)
+    p15.runs[3].text = "Vikram Singh(RA2411028030010),"
+    p15.runs[4].text = "Amit Vikram Singh RA2411028030016"
         
     # 3. Update Title (P17), Subtitle (P18), Author/Domain (P19)
     p17 = doc.paragraphs[17]
-    p17.text = "A Practical Study of Data Locality Optimization Techniques in Hadoop MapReduce"
+    p17.runs[0].text = "A Practical Study of Data Locality Optimization Techniques in Hadoop MapReduce"
     
     p18 = doc.paragraphs[18]
-    p18.text = "Project Title: Interactive Dashboard and Simulation of Data Locality Optimization in Hadoop MapReduce"
+    p18.runs[0].text = "Project Title: Interactive Dashboard and Simulation of Data Locality Optimization in Hadoop MapReduce"
     
     p19 = doc.paragraphs[19]
-    p19.text = "Domain: Big Data Systems & Distributed Computing · Cloud Computing | Tools: C++20, Python (Streamlit, pandas, plotly, scipy, matplotlib)"
+    p19.runs[0].text = "Domain: Big Data Systems & Distributed Computing · Cloud Computing | Tools: C++20, Python (Streamlit, pandas, plotly, scipy, matplotlib)"
     
     # 4. Update INDEX table (Table 2)
     t_idx = doc.tables[2]
-    # Keep header row, update rows 1 to 13
     index_entries = [
         ("1", "Abstract", "5"),
         ("2", "Section 1 — Introduction", "6"),
@@ -73,13 +54,19 @@ def build_perfect_report():
     ]
     for r_idx, (sr, part, pg) in enumerate(index_entries):
         row = t_idx.rows[r_idx + 1]
-        row.cells[0].text = sr
-        row.cells[1].text = part
-        row.cells[2].text = pg
+        for c_idx, val in enumerate([sr, part, pg]):
+            cell = row.cells[c_idx]
+            p = cell.paragraphs[0]
+            p.style = 'Compact'
+            if p.runs:
+                p.runs[0].text = val
+                for r in p.runs[1:]:
+                    r.text = ""
+            else:
+                p.add_run(val)
 
     # 5. Remove all body elements from index 24 up to len(body)-1 (leaving sectPr intact)
     body = doc._body._body
-    # We remove elements between index 24 and the last element (which is sectPr)
     while len(body) > 25:
         el = body[24]
         if el.tag.endswith('sectPr'):
@@ -91,6 +78,9 @@ def build_perfect_report():
     # Helpers using exact template styles
     def h2(text):
         p = doc.add_paragraph(style='Heading 2')
+        pPr = p._p.get_or_add_pPr()
+        pPr.append(parse_xml(r'<w:pageBreakBefore xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"/>'))
+        pPr.append(parse_xml(r'<w:pBdr xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:bottom w:val="single" w:sz="8" w:space="4" w:color="2E5597"/></w:pBdr>'))
         p.add_run(text)
         return p
         
@@ -129,10 +119,17 @@ def build_perfect_report():
         tbl.style = 'Table'
         tbl.alignment = WD_TABLE_ALIGNMENT.CENTER
         for c_idx, h in enumerate(headers):
-            tbl.rows[0].cells[c_idx].text = h
+            cell = tbl.rows[0].cells[c_idx]
+            p = cell.paragraphs[0]
+            p.style = 'Compact'
+            r = p.add_run(h)
+            r.bold = True
         for r_idx, r_vals in enumerate(rows_data):
             for c_idx, val in enumerate(r_vals):
-                tbl.rows[r_idx + 1].cells[c_idx].text = str(val)
+                cell = tbl.rows[r_idx + 1].cells[c_idx]
+                p = cell.paragraphs[0]
+                p.style = 'Compact'
+                p.add_run(str(val))
         return tbl
 
     # =========================================================================

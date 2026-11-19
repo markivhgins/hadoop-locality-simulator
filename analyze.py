@@ -12,7 +12,7 @@ from scipy import stats
 R = sys.argv[1] if len(sys.argv) > 1 else "results"
 FIG = f"{R}/figures"; os.makedirs(FIG, exist_ok=True)
 df = pd.read_csv(f"{R}/all_runs.csv")
-man = pd.read_csv(f"{R}/manifest.csv")
+man = pd.read_csv(f"{R}/manifest.csv") if os.path.exists(f"{R}/manifest.csv") else None
 
 METRICS = ["makespan_s", "mean_turnaround_s", "mean_wait_s", "mean_remote_read_s", "remote_mib", "cross_rack_mib"]
 POL = ["blind", "aware", "delay"]
@@ -212,5 +212,5 @@ for exp in ["E6_shared", "E6_shared_fast"]:
         body.append([exp, v] + [f"{g[g.policy == p].mean_remote_read_s.mean():.1f}" for p in POL] + [f"{g[g.policy == p].core_load.mean():.2f}" for p in POL])
 out.append("**Table 14. Contention diagnostics: mean remote read time (s) and offered core load**\n\n" +
            md(["Exp", "Core cap", "read blind", "read aware", "read delay", "load blind", "load aware", "load delay"], body))
-open(f"{R}/tables.md", "w").write("\n\n".join(out))
+open(f"{R}/tables.md", "w", encoding="utf-8").write("\n\n".join(out))
 print("wrote summary.csv, tables.md, figures/ ->", R)
